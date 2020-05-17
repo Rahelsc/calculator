@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <style>
+        * {
+            text-align: center;
+        }
+        
+        .numbers {
+            margin: auto;
+            max-width: 500px;
+            padding: 2%;
+        }
+        
+        input {
+            width: 80%;
+            padding-top: 40px;
+            margin: 2rem auto;
+            border-radius: 5px;
+            font-size: xx-large;
+            font-family: monospace;
+        }
+        
+        div {
+            display: block;
+            background-color: darkmagenta;
+            width: 100%;
+            border-radius: 10px;
+        }
+        
+        button {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 5px;
+            margin: 8px 6px;
+            background-color: ivory;
+            font-size: larger;
+            font-weight: 200;
+        }
+        
+        button:hover {
+            background-color: darkgray;
+        }
+        
+        .equals {
+            padding-right: 14%;
+            padding-left: 14%;
+        }
+    </style>
+    <title>calculator</title>
+</head>
+
+<body>
+    <div class="numbers">
+        <input type="text" id="sum entered" class="input" />
+        <div>
+            <button value="1" onclick="setValue(value)">1</button>
+            <button value="2" onclick="setValue(value)">2</button>
+            <button value="3" onclick="setValue(value)">3</button>
+            <button value="c" onclick="clearAll()">C</button>
+            <button value="delete" onclick="deleteAll()">del</button>
+        </div>
+
+
+        <div>
+            <button value="4" onclick="setValue(value)">4</button>
+            <button value="5" onclick="setValue(value)">5</button>
+            <button value="6" onclick="setValue(value)">6</button>
+            <button value="+" onclick="setValue(value)">+</button>
+            <button value="-" onclick="setValue(value)">-</button>
+        </div>
+
+        <div>
+            <button value="7" onclick="setValue(value)">7</button>
+            <button value="8" onclick="setValue(value)">8</button>
+            <button value="9" onclick="setValue(value)">9</button>
+            <button value="*" onclick="setValue(value)">*</button>
+            <button value="/" onclick="setValue(value)">/</button>
+        </div>
+
+        <div>
+            <button value="0" onclick="setValue(value)">0</button>
+            <button value="=" onclick="setValue(value)" class="equals">=</button>
+            <button value="." onclick="setValue(value)">.</button>
+            <button value="%" onclick="setValue(value)">%</button>
+        </div>
+
+
+    </div>
+
+    <script>
+        let graphicOutput = document.getElementById('sum entered');
+        // in order for this calculator not to be limited to two operands I used an array to store all inputs:
+        let numberList = [];
+        let tempArray = [];
+        let num1;
+        let calculated = false;
+        let sum = 0;
+
+        function setValue(value) {
+            // if an operator is input, previous operand is saved and so is the operator:
+            if (
+                value == '+' ||
+                value == '-' ||
+                value == '*' ||
+                value == '/' ||
+                value == '%'
+            ) {
+                if (sum == 0) num1 = Number(graphicOutput.value);
+                // if a user tries to use the zero error output as an operand,
+                // the relevant operand will be set to 0 instead:
+                else if (sum == "you can't divide by 0") num1 = 0;
+                // if user want to use previous sum as new operand
+                else num1 = sum;
+
+                numberList.push(num1);
+                numberList.push(value);
+                graphicOutput.value = ''; // reset the field
+            } else if (value == '=') {
+                numberList.push(Number(graphicOutput.value)); // save last input to field
+                graphicOutput.value = '';
+                action(); // sends for the calculations to be completed
+            } else {
+                if (calculated == true) {
+                    graphicOutput.value = ''; // tp delete previous result
+                    calculated = false; // resets the was calculated or not field, so that new operation can be operated
+                }
+                graphicOutput.value += value; // saves the numbers till next number is input
+                sum = 0; // resets sum for first 'if' check
+            }
+        }
+
+        function action() {
+            sum = numberList[0]; // starts from first array element
+            console.log(numberList);
+            // to ensure operator precedence the switch case was split into two
+            for (let i = 1; i < numberList.length - 1; i++) {
+                // the operator is always in the uneven element of the array surrounded by operands:
+                switch (numberList[i]) {
+                    case '*':
+                        sum = numberList[i - 1] * numberList[i + 1];
+                        numberList.splice(i - 1, 3, sum); // using splice to insert the result of the math equation to ensure that future + - operations will run smoothly
+                        i -= 1; // since the array is shortened by the splice needs to count again from previous element
+                        break;
+                    case '/':
+                        if (numberList[i + 1] != 0) sum = numberList[i - 1] / numberList[i + 1];
+                        else sum = "you can't divide by 0";
+                        numberList.splice(i - 1, 3, sum);
+                        i -= 1;
+                        break;
+                    case '%':
+                        if (numberList[i + 1] != 0) {
+                            // to ensure we can perform modulus Math.floor
+                            sum = Math.floor(numberList[i - 1]) % Math.floor(numberList[i + 1]);
+                        } else sum = "you can't divide by 0";
+                        numberList.splice(i - 1, 3, sum);
+                        i -= 1;
+                        break;
+                }
+            }
+            console.log(numberList);
+            sum = numberList[0];
+            for (let i = 1; i < numberList.length - 1; i++) {
+                // the operator is always in the uneven element of the array surrounded by operands:
+                switch (numberList[i]) {
+                    case '+':
+                        sum += numberList[i + 1];
+                        break;
+                    case '-':
+                        sum -= numberList[i + 1];
+                        break;
+                }
+            }
+            console.log(numberList);
+            console.log(sum);
+            if (numberList.length == 1) sum = numberList[0];
+
+            graphicOutput.value = sum // prints result
+            numberList = []; // reset array for new calculation
+            calculated = true;
+        }
+
+        function clearAll() {
+            // clear screen
+            graphicOutput.value = '';
+        }
+
+        function deleteAll() {
+            graphicOutput.value = ''
+            sum = 0
+            numberList = []
+            calculated = false
+        }
+    </script>
+</body>
+
+</html>
